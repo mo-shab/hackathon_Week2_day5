@@ -41,18 +41,29 @@ class MenuItem():
         finally:
             self.disconnect()
 
+
     def update(self, name=None, price=None):
         """Update the menu item in the database."""
         if name is None and price is None:
-            print("No new values provided for update.")
             return
+        
+        new_name = name if name is not None else self.name
+        new_price = price if price is not None else self.price
         
         self.connect()
 
         try:
             query = "UPDATE menu_item SET item_name = %s, item_price = %s WHERE item_name = %s"
-            self.cursor.execute(query, (name, price, self.name))
+            self.cursor.execute(query, (new_name, new_price, self.name))
             self.connection.commit()
+            
+            if self.cursor.rowcount > 0:
+                old_name = self.name
+                self.name = new_name
+                self.price = new_price
+                print(f"Menu item updated: {old_name} -> {self.name}, {self.price}")
+            else:
+                print(f"No rows affected when updating {self.name}")
         except Exception as e:
             print(f"Error updating the menu item: {e}")
         finally:

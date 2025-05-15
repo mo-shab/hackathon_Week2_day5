@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify
 from config.menu_item import MenuItem
 from config.menu_manager import MenuManager
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)  
 
 @app.route('/api/all_items', methods=['GET'])
 def get_all_items():
@@ -35,16 +37,27 @@ def handle_item(name=None):
             return jsonify({"error": "Request must be JSON"}), 400
 
     elif request.method == 'PUT':
+        print(f"PUT request received for item: {name}")
         # Update an existing menu item
         if request.is_json:
             data = request.get_json()
-            name = data[0]['name']
-            price = data[0]['price']
+            new_name = data[0]['name']
+            new_price = data[0]['price']
+            
+            # Récupérer l'item à partir du nom dans l'URL
             item = MenuManager.get_by_name(name)
+            
             if item:
-                item.update(name, price)
+                print(f"Item found: {item.name}, {item.price}")
+                print(f"Updating to: {new_name}, {new_price}")
+                
+                # Mettre à jour avec le nouveau nom et prix
+                item.update(new_name, new_price)
+                
+                print(f"Item updated successfully")
                 return jsonify({"message": "Item updated"}), 200
             else:
+                print(f"Item not found: {name}")
                 return jsonify({"error": "Item not found"}), 404
         else:
             return jsonify({"error": "Request must be JSON"}), 400
@@ -66,3 +79,5 @@ def show_menu():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
