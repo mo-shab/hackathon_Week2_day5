@@ -1,5 +1,5 @@
 // Configuration de base API
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'https://api.mshab.xyz/api';
 const itemModal = new bootstrap.Modal(document.getElementById('itemModal'));
 const alertModal = new bootstrap.Modal(document.getElementById('alertModal'));
 const loadingElement = document.getElementById('loading');
@@ -126,20 +126,39 @@ function showItemDetails(name, price) {
 async function addMenuItem(name, price) {
     try {
         showLoading();
-        await axios.post(`${API_BASE_URL}/item/`, [{
+        console.log('Sending request to:', `${API_BASE_URL}/item/`);
+        console.log('Request data:', [{ name: name, price: parseFloat(price) }]);
+        
+        const response = await axios.post(`${API_BASE_URL}/item/`, [{
             name: name,
             price: parseFloat(price)
-        }]);
+        }], {
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
         
+        console.log('Response:', response);
         showAlert('Succès', `L'item "${name}" a été ajouté au menu.`);
-        loadMenuItems(); // Recharger la liste des items
-        
-        // Réinitialiser le formulaire
+        loadMenuItems();
         document.getElementById('add-item-form').reset();
         
     } catch (error) {
-        console.error('Erreur lors de l\'ajout de l\'item:', error);
-        showAlert('Erreur', 'Impossible d\'ajouter l\'item au menu. Veuillez réessayer.', 'error');
+        console.error('Full error object:', error);
+        console.error('Error response:', error.response);
+        console.error('Error message:', error.message);
+        console.error('Error code:', error.code);
+        
+        let errorMessage = 'Impossible d\'ajouter l\'item au menu. ';
+        if (error.response) {
+            errorMessage += `Erreur ${error.response.status}: ${error.response.data?.error || error.response.statusText}`;
+        } else if (error.code === 'ERR_NETWORK') {
+            errorMessage += 'Problème de réseau. Vérifiez que l\'API est accessible.';
+        } else {
+            errorMessage += error.message;
+        }
+        
+        showAlert('Erreur', errorMessage, 'error');
     } finally {
         hideLoading();
     }
